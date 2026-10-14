@@ -34,6 +34,17 @@ Run lint and typecheck before declaring any task done.
 Use EAS to build, sign, and submit the app in the cloud (`eas build`, `eas submit`) and to ship over-the-air updates (`eas update`) — no local Xcode or Android Studio required. Run EAS CLI as `bunx eas-cli <command>` in Bun projects, or `npx eas-cli@latest <command>` otherwise; substitute that for bare `eas` in docs examples.
 Docs: https://docs.expo.dev/eas/index.md
 
+## Database changes (Supabase)
+
+The database is changed by hand in the Supabase SQL Editor, so every change must be runnable on its own against the database as it already exists.
+
+- Every database change (tables, columns, functions, RLS policies, storage buckets, seed data) goes in a **new** SQL file in `supabase/migrations/`, named sequentially: `migration01.sql`, `migration02.sql`, `migration03.sql`, … The next number is the highest existing one + 1.
+- Never edit a migration that was already applied, and never recreate a single "full schema" file. Fixes and follow-ups are a new migration.
+- A migration contains only what changes relative to the previous migrations. Open it with a comment saying what it does and which migration it depends on.
+- Make it safe to re-run when possible: `create or replace function`, `if not exists`, `drop policy if exists` before `create policy`, `on conflict ... do update`. `create table if not exists` does **not** add columns to an existing table — use `alter table ... add column if not exists`.
+- Keep `src/lib` in sync: only use tables, columns, functions and buckets that exist in a migration.
+- When you add a migration, tell the user exactly which file(s) to run (only the new ones) and update the list in `README.md`.
+
 ## Rules
 
 - If `ios/` and `android/` directories do not exist, they are generated (Continuous Native Generation). Never create or edit them by hand — configure native behavior in `app.json` and config plugins.
