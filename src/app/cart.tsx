@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { QuantityStepper } from '@/components/quantity-stepper';
@@ -10,6 +10,7 @@ import { EmptyView, ErrorView, LoadingView } from '@/components/state-views';
 import { colors, radius, spacing } from '@/constants/theme';
 import { useCart } from '@/hooks/use-cart';
 import { useShirts } from '@/hooks/use-shirts';
+import { confirmAction } from '@/lib/confirm';
 import { units } from '@/lib/format';
 import { checkoutStock, errorMessage } from '@/lib/shirts';
 
@@ -53,10 +54,12 @@ export default function CartScreen() {
   const hasInsufficient = rows.some((row) => row.insufficient);
 
   function confirm() {
-    Alert.alert('Dar baixa no estoque?', `${units(totalUnits)} serão retiradas do estoque.`, [
-      { text: 'Cancelar', style: 'cancel' },
-      { text: 'Dar baixa', onPress: submit },
-    ]);
+    confirmAction({
+      title: 'Dar baixa no estoque?',
+      message: `${units(totalUnits)} serão retiradas do estoque.`,
+      confirmLabel: 'Dar baixa',
+      onConfirm: submit,
+    });
   }
 
   async function submit() {

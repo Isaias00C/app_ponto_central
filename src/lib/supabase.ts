@@ -9,11 +9,12 @@ if (!supabaseUrl || !supabasePublishableKey) {
   );
 }
 
-// Sem login por enquanto: nao ha sessao para persistir nem renovar.
+// A sessao do login fica no localStorage do navegador e e renovada sozinha.
+// `detectSessionInUrl` desligado: so usamos e-mail e senha, e na web a URL tem o subcaminho do Pages.
 export const supabase = createClient(supabaseUrl, supabasePublishableKey, {
   auth: {
-    persistSession: false,
-    autoRefreshToken: false,
+    persistSession: true,
+    autoRefreshToken: true,
     detectSessionInUrl: false,
   },
 });

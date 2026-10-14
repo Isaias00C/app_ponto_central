@@ -34,6 +34,15 @@ Run lint and typecheck before declaring any task done.
 Use EAS to build, sign, and submit the app in the cloud (`eas build`, `eas submit`) and to ship over-the-air updates (`eas update`) — no local Xcode or Android Studio required. Run EAS CLI as `bunx eas-cli <command>` in Bun projects, or `npx eas-cli@latest <command>` otherwise; substitute that for bare `eas` in docs examples.
 Docs: https://docs.expo.dev/eas/index.md
 
+## Web target (GitHub Pages PWA)
+
+The app is shipped as a static web export (`npx expo export -p web`, `web.output: "single"`) on GitHub Pages under the subpath in `experiments.baseUrl`; deploys run from `.github/workflows/deploy-pages.yml`. Do not assume a native build.
+
+- Everything must work in the browser (react-native-web). `Alert.alert` is a no-op there — use `confirmAction` from `src/lib/confirm.ts`. `expo-image-picker`'s `allowsEditing`/`aspect`/`quality` and `RefreshControl` (pull to refresh) have no effect on web. Guard native-only modules with `Platform.OS`, and import them lazily if they don't list web support (see `src/lib/shirt-images.ts`).
+- `EXPO_PUBLIC_*` values are inlined at build time. In CI they come from repository **variables** (not the local `.env`), so a new variable must also be added there.
+- Auth is Supabase email/password (`src/hooks/use-auth.tsx`). `Stack.Protected` only hides routes on the client; real access control is RLS, so any new table needs RLS policies for `authenticated` only, in a migration.
+- Links in `public/index.html` and `public/manifest.json` are not prefixed by Expo; keep them in sync with `experiments.baseUrl`.
+
 ## Database changes (Supabase)
 
 The database is changed by hand in the Supabase SQL Editor, so every change must be runnable on its own against the database as it already exists.

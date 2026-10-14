@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { AppState } from 'react-native';
 
+import { useAuth } from '@/hooks/use-auth';
 import { errorMessage, fetchShirts, type Shirt } from '@/lib/shirts';
 
 type ShirtsContextValue = {
@@ -21,8 +22,18 @@ type ShirtsContextValue = {
 const ShirtsContext = createContext<ShirtsContextValue | null>(null);
 
 export function ShirtsProvider({ children }: { children: ReactNode }) {
+  const { session } = useAuth();
+  const userId = session?.user.id ?? null;
   const [shirts, setShirts] = useState<Shirt[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [ownerId, setOwnerId] = useState(userId);
+
+  // Ao sair ou trocar de conta, descarta o estoque carregado para a conta anterior.
+  if (ownerId !== userId) {
+    setOwnerId(userId);
+    setShirts(null);
+    setError(null);
+  }
 
   const reload = useCallback(
     () =>
@@ -36,17 +47,20 @@ export function ShirtsProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  // Sem login o RLS nao devolve nada, entao so carrega com usuario.
   useEffect(() => {
-    reload();
-  }, [reload]);
+    if (userId) reload();
+  }, [userId, reload]);
 
-  // O estoque tambem pode ser alterado direto no Supabase; atualiza ao voltar pro app.
+  // O estoque tambem pode ser alterado por outra pessoa; atualiza ao voltar pro app ou pra aba.
   useEffect(() => {
+    if (!userId) return;
+
     const subscription = AppState.addEventListener('change', (state) => {
       if (state === 'active') reload();
     });
     return () => subscription.remove();
-  }, [reload]);
+  }, [userId, reload]);
 
   const value = useMemo(() => ({ shirts, error, reload }), [shirts, error, reload]);
 

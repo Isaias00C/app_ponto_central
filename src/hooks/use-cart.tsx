@@ -8,6 +8,7 @@ import {
 } from 'react';
 
 import type { Size } from '@/constants/sizes';
+import { useAuth } from '@/hooks/use-auth';
 import type { StockItem } from '@/lib/shirts';
 
 type CartContextValue = {
@@ -22,7 +23,16 @@ type CartContextValue = {
 const CartContext = createContext<CartContextValue | null>(null);
 
 export function CartProvider({ children }: { children: ReactNode }) {
+  const { session } = useAuth();
+  const userId = session?.user.id ?? null;
   const [items, setItems] = useState<StockItem[]>([]);
+  const [ownerId, setOwnerId] = useState(userId);
+
+  // O carrinho nao e herdado ao sair ou trocar de conta (outra pessoa pode usar o mesmo navegador).
+  if (ownerId !== userId) {
+    setOwnerId(userId);
+    setItems([]);
+  }
 
   const setQuantity = useCallback((shirtId: string, size: Size, quantity: number) => {
     setItems((current) => {

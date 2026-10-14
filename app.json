@@ -21,7 +21,16 @@
       "package": "com.pontocentral.app"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "output": "single",
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png",
+      "name": "Ponto Central",
+      "shortName": "PontoCentral",
+      "description": "Estoque de camisas do Ponto Central",
+      "lang": "pt-BR",
+      "display": "standalone",
+      "themeColor": "#1D4ED8",
+      "backgroundColor": "#F4F5F7"
     },
     "plugins": [
       "expo-router",
@@ -37,7 +46,8 @@
     ],
     "scheme": "pontocentral",
     "experiments": {
-      "typedRoutes": true
+      "typedRoutes": true,
+      "baseUrl": "/app_ponto_central"
     }
   }
 }

@@ -16,6 +16,7 @@ import { ShirtImage } from '@/components/shirt-image';
 import { ErrorView, LoadingView } from '@/components/state-views';
 import { SIZES, type Size } from '@/constants/sizes';
 import { colors, radius, spacing } from '@/constants/theme';
+import { useAuth } from '@/hooks/use-auth';
 import { useShirts } from '@/hooks/use-shirts';
 import { addStock, errorMessage } from '@/lib/shirts';
 
@@ -25,6 +26,7 @@ type Feedback = { kind: 'success' | 'error'; text: string };
 
 export default function ManageScreen() {
   const { shirts, error, reload } = useShirts();
+  const { session, signOut } = useAuth();
   const [shirtId, setShirtId] = useState<string | null>(null);
   const [size, setSize] = useState<Size | null>(null);
   const [quantity, setQuantity] = useState('1');
@@ -50,6 +52,15 @@ export default function ManageScreen() {
     setRefreshing(true);
     await reload();
     setRefreshing(false);
+  }
+
+  async function onSignOut() {
+    try {
+      // Ao sair, o guarda de rotas leva para o login sozinho.
+      await signOut();
+    } catch (e) {
+      setFeedback({ kind: 'error', text: errorMessage(e) });
+    }
   }
 
   async function submit() {
@@ -162,6 +173,13 @@ export default function ManageScreen() {
       ) : null}
 
       <Button label="Adicionar ao estoque" onPress={submit} disabled={!canSubmit} loading={saving} />
+
+      <View style={styles.account}>
+        <Text style={styles.accountEmail} numberOfLines={1}>
+          {session?.user.email}
+        </Text>
+        <Button label="Sair" variant="secondary" onPress={onSignOut} />
+      </View>
     </ScrollView>
   );
 }
@@ -258,6 +276,17 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm,
     borderWidth: 1,
     borderColor: colors.border,
+  },
+  account: {
+    gap: spacing.sm,
+    paddingTop: spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  accountEmail: {
+    fontSize: 14,
+    color: colors.textMuted,
+    textAlign: 'center',
   },
   feedback: {
     borderRadius: radius.sm,
