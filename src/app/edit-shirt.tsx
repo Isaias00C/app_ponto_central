@@ -1,0 +1,49 @@
+import { router, useLocalSearchParams } from 'expo-router';
+
+import { ShirtForm, type ShirtFormValues } from '@/components/shirt-form';
+import { EmptyView, ErrorView, LoadingView } from '@/components/state-views';
+import { useShirts } from '@/hooks/use-shirts';
+import { deleteShirtImage, uploadShirtImage } from '@/lib/shirt-images';
+import { updateShirt } from '@/lib/shirts';
+
+export default function EditShirtScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const { shirts, error, reload } = useShirts();
+
+  if (!shirts) {
+    return error ? <ErrorView message={error} onRetry={reload} /> : <LoadingView />;
+  }
+
+  const shirt = shirts.find((item) => item.id === id);
+  if (!shirt) return <EmptyView title="Camisa não encontrada" />;
+
+  const { id: shirtId, imageUrl: currentImageUrl } = shirt;
+
+  async function save({ description, image, removeImage }: ShirtFormValues) {
+    const uploadedUrl = image ? await uploadShirtImage(image) : null;
+    const imageUrl = uploadedUrl ?? (removeImage ? null : currentImageUrl);
+
+    try {
+      await updateShirt(shirtId, { description, imageUrl });
+    } catch (e) {
+      // A camisa nao mudou, entao a imagem que acabou de subir ficaria orfa.
+      await deleteShirtImage(uploadedUrl);
+      throw e;
+    }
+
+    // So apaga a antiga depois de salvar: se algo falhar, a camisa continua com a imagem dela.
+    if (imageUrl !== currentImageUrl) await deleteShirtImage(currentImageUrl);
+
+    await reload();
+    router.back();
+  }
+
+  return (
+    <ShirtForm
+      initialDescription={shirt.description}
+      initialImageUrl={shirt.imageUrl}
+      submitLabel="Salvar alterações"
+      onSubmit={save}
+    />
+  );
+}

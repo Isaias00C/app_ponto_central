@@ -17,8 +17,11 @@ import { ErrorView, LoadingView } from '@/components/state-views';
 import { SIZES, type Size } from '@/constants/sizes';
 import { colors, radius, spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/use-auth';
+import { useCart } from '@/hooks/use-cart';
 import { useShirts } from '@/hooks/use-shirts';
-import { addStock, errorMessage } from '@/lib/shirts';
+import { confirmAction } from '@/lib/confirm';
+import { deleteShirtImage } from '@/lib/shirt-images';
+import { addStock, deleteShirt, errorMessage } from '@/lib/shirts';
 
 const MAX_QUANTITY = 9999;
 
@@ -27,10 +30,12 @@ type Feedback = { kind: 'success' | 'error'; text: string };
 export default function ManageScreen() {
   const { shirts, error, reload } = useShirts();
   const { session, signOut } = useAuth();
+  const { removeShirt } = useCart();
   const [shirtId, setShirtId] = useState<string | null>(null);
   const [size, setSize] = useState<Size | null>(null);
   const [quantity, setQuantity] = useState('1');
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
 
@@ -60,6 +65,40 @@ export default function ManageScreen() {
       await signOut();
     } catch (e) {
       setFeedback({ kind: 'error', text: errorMessage(e) });
+    }
+  }
+
+  function editSelected() {
+    if (selected) router.push({ pathname: '/edit-shirt', params: { id: selected.id } });
+  }
+
+  function confirmDelete() {
+    if (!selected) return;
+
+    confirmAction({
+      title: 'Excluir camisa?',
+      message: `"${selected.description}" e o estoque dela (${selected.total} un.) serão apagados. Isso não pode ser desfeito.`,
+      confirmLabel: 'Excluir',
+      onConfirm: removeSelected,
+    });
+  }
+
+  async function removeSelected() {
+    if (!selected) return;
+
+    setDeleting(true);
+    setFeedback(null);
+    try {
+      await deleteShirt(selected.id);
+      await deleteShirtImage(selected.imageUrl);
+      removeShirt(selected.id);
+      setShirtId(null);
+      await reload();
+      setFeedback({ kind: 'success', text: 'Camisa excluída.' });
+    } catch (e) {
+      setFeedback({ kind: 'error', text: errorMessage(e) });
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -110,6 +149,16 @@ export default function ManageScreen() {
             </Pressable>
           );
         })}
+        {selected ? (
+          <View style={styles.rowActions}>
+            <View style={styles.rowAction}>
+              <Button label="Editar" variant="secondary" onPress={editSelected} disabled={deleting} />
+            </View>
+            <View style={styles.rowAction}>
+              <Button label="Excluir" variant="danger" onPress={confirmDelete} loading={deleting} />
+            </View>
+          </View>
+        ) : null}
         <Button label="Cadastrar nova camisa" variant="secondary" onPress={() => router.push('/new-shirt')} />
       </View>
 
@@ -218,6 +267,13 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     color: colors.text,
+  },
+  rowActions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  rowAction: {
+    flex: 1,
   },
   chips: {
     flexDirection: 'row',

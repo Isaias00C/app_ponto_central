@@ -17,6 +17,8 @@ type CartContextValue = {
   quantityOf: (shirtId: string, size: Size) => number;
   /** Define a quantidade do item no carrinho; 0 (ou menos) remove o item. */
   setQuantity: (shirtId: string, size: Size, quantity: number) => void;
+  /** Tira do carrinho todos os itens de uma camisa (ex.: ela foi excluida). */
+  removeShirt: (shirtId: string) => void;
   clear: () => void;
 };
 
@@ -44,6 +46,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const removeShirt = useCallback((shirtId: string) => {
+    setItems((current) => current.filter((item) => item.shirtId !== shirtId));
+  }, []);
+
   const clear = useCallback(() => setItems([]), []);
 
   const value = useMemo<CartContextValue>(
@@ -53,9 +59,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
       quantityOf: (shirtId, size) =>
         items.find((item) => item.shirtId === shirtId && item.size === size)?.quantity ?? 0,
       setQuantity,
+      removeShirt,
       clear,
     }),
-    [items, setQuantity, clear],
+    [items, setQuantity, removeShirt, clear],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

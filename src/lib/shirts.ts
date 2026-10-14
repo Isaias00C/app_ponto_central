@@ -56,6 +56,32 @@ export async function createShirt(input: {
   return data.id as string;
 }
 
+// Sem policy de UPDATE/DELETE (migration04) o Supabase nao da erro: apenas afeta 0 linhas.
+// Por isso pedimos as linhas de volta e tratamos "nenhuma" como falha.
+const NOT_CHANGED = 'Camisa não encontrada ou sem permissão para alterar.';
+
+export async function updateShirt(
+  id: string,
+  input: { description: string; imageUrl: string | null },
+): Promise<void> {
+  const { data, error } = await supabase
+    .from('shirt_types')
+    .update({ description: input.description, image_url: input.imageUrl })
+    .eq('id', id)
+    .select('id');
+
+  if (error) throw error;
+  if (data.length === 0) throw new Error(NOT_CHANGED);
+}
+
+/** Exclui a camisa e, em cascata, o estoque dela. */
+export async function deleteShirt(id: string): Promise<void> {
+  const { data, error } = await supabase.from('shirt_types').delete().eq('id', id).select('id');
+
+  if (error) throw error;
+  if (data.length === 0) throw new Error(NOT_CHANGED);
+}
+
 /** Soma `quantity` ao estoque do tamanho e devolve o novo saldo. */
 export async function addStock(shirtId: string, size: Size, quantity: number): Promise<number> {
   const { data, error } = await supabase.rpc('adjust_stock', {

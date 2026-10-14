@@ -32,7 +32,8 @@ function RootNavigator() {
           <Stack.Protected guard={signedIn}>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="new-shirt" options={{ presentation: 'modal', title: 'Nova camisa' }} />
-            <Stack.Screen name="cart" options={{ presentation: 'modal', title: 'Carrinho' }} />
+            <Stack.Screen name="edit-shirt" options={{ presentation: 'modal', title: 'Editar camisa' }} />
+            <Stack.Screen name="cart"options={{ presentation: 'modal', title: 'Carrinho' }} />
           </Stack.Protected>
 
           <Stack.Protected guard={!signedIn}>

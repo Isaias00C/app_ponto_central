@@ -56,6 +56,9 @@ No navegador a imagem é reduzida (lado maior de 1280 px, JPEG) antes do envio, 
 Ela é enviada para o bucket público `shirt-images` do Supabase Storage (criado pela `migration02.sql`) e o
 link fica salvo em `shirt_types.image_url`. Sem imagem, o card mostra um ícone.
 
+Para **editar** (descrição e imagem) ou **excluir** uma camisa, selecione-a em Gerenciar > Camisa e use os botões
+**Editar** / **Excluir**. Excluir apaga também o estoque dela e a imagem no bucket (exige a `migration04.sql`).
+
 ## Dar baixa (venda)
 
 Abra uma camisa e use **+** nos tamanhos para separar unidades no carrinho. Vá a outras camisas e repita. A barra
@@ -79,3 +82,4 @@ feita de uma vez só (tudo ou nada) pela função `checkout_stock`, que recusa a
   - `migration01.sql` — tabelas, função `adjust_stock` e policies de RLS
   - `migration02.sql` — função `checkout_stock` (baixa em lote) e bucket `shirt-images` com a policy de upload
   - `migration03.sql` — exige login: policies e funções só para `authenticated`
+  - `migration04.sql` — editar e excluir camisas: policies de update/delete em `shirt_types` e de remoção de imagens no bucket
