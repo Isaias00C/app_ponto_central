@@ -1,7 +1,6 @@
-import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { IoAdd, IoRemove } from 'react-icons/io5';
 
-import { colors, radius, spacing } from '@/constants/theme';
+import styles from './quantity-stepper.module.css';
 
 type Props = {
   value: number;
@@ -12,60 +11,29 @@ type Props = {
 };
 
 export function QuantityStepper({ value, min = 0, max, onChange, label }: Props) {
-  const canDecrease = value > min;
-  const canIncrease = value < max;
-
   return (
-    <View style={styles.row}>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={`Diminuir ${label}`}
-        disabled={!canDecrease}
-        onPress={() => onChange(value - 1)}
-        style={[styles.button, !canDecrease && styles.disabled]}
+    <div className={styles.row}>
+      <button
+        type="button"
+        aria-label={`Diminuir ${label}`}
+        disabled={value <= min}
+        onClick={() => onChange(value - 1)}
+        className={styles.button}
       >
-        <Ionicons name="remove" size={20} color={colors.primary} />
-      </Pressable>
-      <Text style={styles.value} accessibilityLabel={`${label}: ${value}`}>
+        <IoRemove size={20} />
+      </button>
+      <span className={styles.value} aria-label={`${label}: ${value}`}>
         {value}
-      </Text>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={`Aumentar ${label}`}
-        disabled={!canIncrease}
-        onPress={() => onChange(value + 1)}
-        style={[styles.button, !canIncrease && styles.disabled]}
+      </span>
+      <button
+        type="button"
+        aria-label={`Aumentar ${label}`}
+        disabled={value >= max}
+        onClick={() => onChange(value + 1)}
+        className={styles.button}
       >
-        <Ionicons name="add" size={20} color={colors.primary} />
-      </Pressable>
-    </View>
+        <IoAdd size={20} />
+      </button>
+    </div>
   );
 }
-
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  button: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  disabled: {
-    opacity: 0.35,
-  },
-  value: {
-    minWidth: 28,
-    textAlign: 'center',
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text,
-  },
-});

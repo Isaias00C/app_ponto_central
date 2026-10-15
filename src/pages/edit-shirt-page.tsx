@@ -1,14 +1,25 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { useParams } from 'react-router';
 
+import { Page } from '@/components/page';
 import { ShirtForm, type ShirtFormValues } from '@/components/shirt-form';
 import { EmptyView, ErrorView, LoadingView } from '@/components/state-views';
+import { useGoBack } from '@/hooks/use-go-back';
 import { useShirts } from '@/hooks/use-shirts';
 import { deleteShirtImage, uploadShirtImage } from '@/lib/shirt-images';
 import { updateShirt } from '@/lib/shirts';
 
-export default function EditShirtScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+export function EditShirtPage() {
+  return (
+    <Page title="Editar camisa" backTo="/manage" modal>
+      <EditShirt />
+    </Page>
+  );
+}
+
+function EditShirt() {
+  const { id } = useParams<{ id: string }>();
   const { shirts, error, reload } = useShirts();
+  const goBack = useGoBack('/manage');
 
   if (!shirts) {
     return error ? <ErrorView message={error} onRetry={reload} /> : <LoadingView />;
@@ -35,7 +46,7 @@ export default function EditShirtScreen() {
     if (imageUrl !== currentImageUrl) await deleteShirtImage(currentImageUrl);
 
     await reload();
-    router.back();
+    goBack();
   }
 
   return (

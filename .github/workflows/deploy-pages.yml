@@ -30,16 +30,16 @@ jobs:
 
       - run: npm ci
 
-      - name: Export web build
-        run: npx expo export -p web
+      - name: Build
+        run: npm run build
         env:
           # Em Settings > Secrets and variables > Actions > Variables.
           # Sao valores publicos (ficam embutidos no bundle), por isso `vars` e nao `secrets`.
-          EXPO_PUBLIC_SUPABASE_URL: ${{ vars.EXPO_PUBLIC_SUPABASE_URL }}
-          EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
 
       # O GitHub Pages nao tem fallback de SPA: abrir/recarregar uma rota interna cairia num 404.
-      # Servir o index.html como 404.html faz o app carregar e o Expo Router resolver a rota.
+      # Servir o index.html como 404.html faz o app carregar e o React Router resolver a rota.
       - name: SPA fallback
         run: cp dist/index.html dist/404.html
 

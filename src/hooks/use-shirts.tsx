@@ -7,7 +7,6 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { AppState } from 'react-native';
 
 import { useAuth } from '@/hooks/use-auth';
 import { errorMessage, fetchShirts, type Shirt } from '@/lib/shirts';
@@ -56,10 +55,11 @@ export function ShirtsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!userId) return;
 
-    const subscription = AppState.addEventListener('change', (state) => {
-      if (state === 'active') reload();
-    });
-    return () => subscription.remove();
+    function onVisibilityChange() {
+      if (document.visibilityState === 'visible') reload();
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange);
   }, [userId, reload]);
 
   const value = useMemo(() => ({ shirts, error, reload }), [shirts, error, reload]);

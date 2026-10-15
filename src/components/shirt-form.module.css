@@ -1,0 +1,48 @@
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+  padding: var(--space-lg);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.label {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.input {
+  min-height: 96px;
+  padding: var(--space-sm) var(--space-md);
+  font-size: 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  resize: vertical;
+}
+
+.previewButton {
+  padding: 0;
+  border: none;
+  background: none;
+  border-radius: var(--radius-sm);
+}
+
+.previewButton:active:not(:disabled) {
+  opacity: 0.7;
+}
+
+.preview {
+  width: 100%;
+  aspect-ratio: 1;
+}
+
+.imageActions {
+  display: flex;
+  gap: var(--space-sm);
+}

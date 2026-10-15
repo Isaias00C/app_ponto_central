@@ -1,0 +1,106 @@
+:root {
+  --color-background: #f4f5f7;
+  --color-surface: #ffffff;
+  --color-border: #e3e5e8;
+  --color-text: #16181d;
+  --color-text-muted: #6b7280;
+  --color-primary: #1d4ed8;
+  --color-primary-text: #ffffff;
+  --color-placeholder: #e5e7eb;
+  --color-danger: #b91c1c;
+  --color-danger-surface: #fee2e2;
+  --color-success: #15803d;
+  --color-success-surface: #dcfce7;
+
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+
+  --header-height: 56px;
+  --tab-bar-height: 56px;
+
+  color-scheme: light;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
+  color: var(--color-text);
+  background: var(--color-background);
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--color-background);
+  overscroll-behavior-y: none;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: default;
+}
+
+img {
+  display: block;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Mensagens de erro/sucesso em caixa (usadas em varias telas). */
+.banner {
+  border-radius: var(--radius-sm);
+  padding: var(--space-md);
+  font-size: 14px;
+}
+
+.banner-error {
+  background: var(--color-danger-surface);
+  color: var(--color-danger);
+}
+
+.banner-success {
+  background: var(--color-success-surface);
+  color: var(--color-success);
+}

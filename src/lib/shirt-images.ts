@@ -1,12 +1,9 @@
-import * as ImagePicker from 'expo-image-picker';
-import { Platform } from 'react-native';
-
 import { supabase } from '@/lib/supabase';
 
 const BUCKET = 'shirt-images';
 
-/** Maior lado da imagem enviada pela web (o picker do navegador nao recorta nem comprime). */
-const WEB_MAX_DIMENSION = 1280;
+/** Maior lado da imagem enviada (o seletor de arquivos do navegador nao recorta nem comprime). */
+const MAX_DIMENSION = 1280;
 
 const EXTENSIONS: Record<string, string> = {
   'image/jpeg': 'jpg',
@@ -15,39 +12,14 @@ const EXTENSIONS: Record<string, string> = {
   'image/heic': 'heic',
 };
 
-export type PickedImage = {
-  uri: string;
-  mimeType: string;
-};
-
-/** Abre a galeria e devolve a imagem escolhida (recortada em quadrado), ou `null` se cancelar. */
-export async function pickShirtImage(): Promise<PickedImage | null> {
-  const result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ['images'],
-    allowsEditing: true,
-    aspect: [1, 1],
-    quality: 0.8,
-  });
-
-  if (result.canceled) return null;
-
-  const asset = result.assets[0];
-  return { uri: asset.uri, mimeType: asset.mimeType ?? 'image/jpeg' };
-}
-
-type UploadBody = { body: ArrayBuffer | Blob; mimeType: string };
-
 /**
- * Na web `allowsEditing`, `aspect` e `quality` nao tem efeito: uma foto de celular pode passar
- * dos 5 MB do bucket. Reduz e converte para JPEG; se o navegador nao decodificar o formato
- * (ex.: HEIC no Chrome), envia o original.
+ * Uma foto de celular pode passar dos 5 MB do bucket: reduz e converte para JPEG. Se o navegador
+ * nao decodificar o formato (ex.: HEIC no Chrome), envia o original.
  */
-async function readWebImage(image: PickedImage): Promise<UploadBody> {
-  const original = await (await fetch(image.uri)).blob();
-
+async function resizeImage(file: File): Promise<Blob> {
   try {
-    const bitmap = await createImageBitmap(original);
-    const scale = Math.min(1, WEB_MAX_DIMENSION / Math.max(bitmap.width, bitmap.height));
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, MAX_DIMENSION / Math.max(bitmap.width, bitmap.height));
     const canvas = document.createElement('canvas');
     canvas.width = Math.round(bitmap.width * scale);
     canvas.height = Math.round(bitmap.height * scale);
@@ -57,25 +29,18 @@ async function readWebImage(image: PickedImage): Promise<UploadBody> {
     const resized = await new Promise<Blob | null>((resolve) =>
       canvas.toBlob(resolve, 'image/jpeg', 0.8),
     );
-    if (resized) return { body: resized, mimeType: 'image/jpeg' };
+    if (resized) return resized;
   } catch {
     // Formato nao suportado pelo navegador: cai no original abaixo.
   }
 
-  return { body: original, mimeType: original.type || image.mimeType };
-}
-
-async function readNativeImage(image: PickedImage): Promise<UploadBody> {
-  // Carregado so no nativo: o expo-file-system nao lista suporte a web.
-  const { File } = await import('expo-file-system');
-  // No React Native o storage-js so aceita ArrayBuffer (Blob/File/FormData nao funcionam).
-  return { body: await new File(image.uri).arrayBuffer(), mimeType: image.mimeType };
+  return file;
 }
 
 /** Envia a imagem para o Storage do Supabase e devolve a URL publica. */
-export async function uploadShirtImage(image: PickedImage): Promise<string> {
-  const { body, mimeType } =
-    Platform.OS === 'web' ? await readWebImage(image) : await readNativeImage(image);
+export async function uploadShirtImage(file: File): Promise<string> {
+  const body = await resizeImage(file);
+  const mimeType = body.type || 'image/jpeg';
 
   const extension = EXTENSIONS[mimeType] ?? 'jpg';
   const path = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${extension}`;

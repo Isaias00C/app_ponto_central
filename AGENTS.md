@@ -1,47 +1,36 @@
-This is an Expo/React Native mobile application. Prioritize mobile-first patterns, performance, and cross-platform compatibility.
-
-## Expo has changed — do not trust your training data
-
-Expo ships breaking changes every SDK release. APIs you remember are likely renamed, moved, or removed. Before writing any code that touches an Expo, EAS, or React Native API:
-
-1. Read the major version of the `expo` package in `package.json`.
-2. Fetch the matching versioned docs: `https://docs.expo.dev/versions/v<major>.0.0/`
-3. For anything else, fetch https://docs.expo.dev/llms.txt — an index of all Expo docs with corrections to common LLM misconceptions. Follow its links to the specific page you need; never answer from memory.
+This is a React + Vite + TypeScript PWA (mobile-first web app), published as a static site on GitHub Pages. There is no native app: everything runs in the browser.
 
 ## Commands
 
-Use `bunx` instead of `npx` if the project uses bun (`bun.lock` present).
-
 ```bash
-npx expo install <package>  # ALWAYS use instead of npm/yarn/pnpm/bun add — resolves SDK-compatible versions
-npx expo start              # start the dev server
-npx expo lint               # lint
-npx tsc --noEmit            # typecheck
-npx expo-doctor             # diagnose dependency and config issues
-npx expo install --fix      # fix incompatible package versions
+npm install          # install dependencies
+npm run dev          # dev server (http://localhost:5173/app_ponto_central/)
+npm run build        # typecheck (tsc -b) + production build to dist/
+npm run preview      # serve the production build locally
+npm run typecheck    # typecheck only
+npm run lint         # lint (oxlint)
 ```
 
-Run lint and typecheck before declaring any task done.
+Run lint and build before declaring any task done.
 
-## Navigation & Routing
+## Stack
 
-- Use **Expo Router** for all navigation. Routes live in `src/app/` — every file there is a screen, `_layout.tsx` files define navigators. Keep non-route code (components, hooks, utils) outside `src/app/`.
-- Import `Link`, `router`, and `useLocalSearchParams` from `expo-router`.
-- Docs: https://docs.expo.dev/router/introduction.md
-
-## Building with EAS
-
-Use EAS to build, sign, and submit the app in the cloud (`eas build`, `eas submit`) and to ship over-the-air updates (`eas update`) — no local Xcode or Android Studio required. Run EAS CLI as `bunx eas-cli <command>` in Bun projects, or `npx eas-cli@latest <command>` otherwise; substitute that for bare `eas` in docs examples.
-Docs: https://docs.expo.dev/eas/index.md
+- React 19, Vite 8, TypeScript (strict). Import alias `@/` → `src/`.
+- Routing: **React Router** (`react-router`, declarative mode with `<BrowserRouter>`). All routes are declared in `src/App.tsx`; screens live in `src/pages/`, shared UI in `src/components/`, state in `src/hooks/`, data access in `src/lib/`.
+- Styling: CSS Modules (`*.module.css` next to the component). Design tokens (colors, spacing, radius) are CSS variables in `src/index.css`; use them instead of hard-coded values. Join classes with `cx` from `src/lib/cx.ts`.
+- Icons: `react-icons/io5` (Ionicons).
+- Data/auth: Supabase (`@supabase/supabase-js`).
 
 ## Web target (GitHub Pages PWA)
 
-The app is shipped as a static web export (`npx expo export -p web`, `web.output: "single"`) on GitHub Pages under the subpath in `experiments.baseUrl`; deploys run from `.github/workflows/deploy-pages.yml`. Do not assume a native build.
+The app is served from a subpath: `base` in `vite.config.ts` (`/app_ponto_central/`). Deploys run from `.github/workflows/deploy-pages.yml` on push to `main`.
 
-- Everything must work in the browser (react-native-web). `Alert.alert` is a no-op there — use `confirmAction` from `src/lib/confirm.ts`. `expo-image-picker`'s `allowsEditing`/`aspect`/`quality` and `RefreshControl` (pull to refresh) have no effect on web. Guard native-only modules with `Platform.OS`, and import them lazily if they don't list web support (see `src/lib/shirt-images.ts`).
-- `EXPO_PUBLIC_*` values are inlined at build time. In CI they come from repository **variables** (not the local `.env`), so a new variable must also be added there.
-- Auth is Supabase email/password (`src/hooks/use-auth.tsx`). `Stack.Protected` only hides routes on the client; real access control is RLS, so any new table needs RLS policies for `authenticated` only, in a migration.
-- Links in `public/index.html` and `public/manifest.json` are not prefixed by Expo; keep them in sync with `experiments.baseUrl`.
+- Never hard-code the subpath. Router links are relative to the `basename` (`import.meta.env.BASE_URL`); files in `public/` referenced from `index.html` with a leading `/` are prefixed by Vite automatically. `public/manifest.json` uses relative paths.
+- GitHub Pages has no SPA fallback: the workflow copies `index.html` to `404.html` so deep links work.
+- Use `confirmAction` from `src/lib/confirm.ts` for confirmations. To go back, use `useGoBack(fallback)` (handles screens opened directly by URL, where there's no in-app history).
+- Mobile-first: layouts must work at phone width, respect `env(safe-area-inset-*)`, and keep touch targets ≥ 40px.
+- `VITE_*` values are inlined at build time. In CI they come from repository **variables** (not the local `.env`), so a new variable must also be added there and in `.env.example`.
+- Auth is Supabase email/password (`src/hooks/use-auth.tsx`). The route guards in `src/App.tsx` only hide screens on the client; real access control is RLS, so any new table needs RLS policies for `authenticated` only, in a migration.
 
 ## Database changes (Supabase)
 
@@ -53,9 +42,3 @@ The database is changed by hand in the Supabase SQL Editor, so every change must
 - Make it safe to re-run when possible: `create or replace function`, `if not exists`, `drop policy if exists` before `create policy`, `on conflict ... do update`. `create table if not exists` does **not** add columns to an existing table — use `alter table ... add column if not exists`.
 - Keep `src/lib` in sync: only use tables, columns, functions and buckets that exist in a migration.
 - When you add a migration, tell the user exactly which file(s) to run (only the new ones) and update the list in `README.md`.
-
-## Rules
-
-- If `ios/` and `android/` directories do not exist, they are generated (Continuous Native Generation). Never create or edit them by hand — configure native behavior in `app.json` and config plugins.
-- Expo Go only includes its bundled native modules. After adding a library with native code, the app needs a development build: `npx expo run:ios|android` locally, or `eas build --profile development`.
-- Prefer recommended Expo modules over third-party libraries, and check your available skills before adding dependencies. Docs: https://docs.expo.dev/versions/latest/index.md

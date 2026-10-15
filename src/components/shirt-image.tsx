@@ -1,45 +1,27 @@
-import { Ionicons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
 import { useState } from 'react';
-import { StyleSheet, View, type ImageStyle, type StyleProp } from 'react-native';
+import { IoShirtOutline } from 'react-icons/io5';
 
-import { colors, radius } from '@/constants/theme';
+import { cx } from '@/lib/cx';
+
+import styles from './shirt-image.module.css';
 
 type Props = {
   uri: string | null;
-  style?: StyleProp<ImageStyle>;
+  /** Define o tamanho (largura/altura ou `aspect-ratio`). */
+  className?: string;
 };
 
-export function ShirtImage({ uri, style }: Props) {
+export function ShirtImage({ uri, className }: Props) {
   const [failedUri, setFailedUri] = useState<string | null>(null);
-
-  if (!uri || failedUri === uri) {
-    return (
-      <View style={[styles.base, styles.placeholder, style]}>
-        <Ionicons name="shirt-outline" size={32} color={colors.textMuted} />
-      </View>
-    );
-  }
+  const showImage = uri && failedUri !== uri;
 
   return (
-    <Image
-      source={{ uri }}
-      style={[styles.base, style]}
-      contentFit="cover"
-      transition={200}
-      onError={() => setFailedUri(uri)}
-    />
+    <div className={cx(styles.base, className)}>
+      {showImage ? (
+        <img src={uri} alt="" loading="lazy" className={styles.image} onError={() => setFailedUri(uri)} />
+      ) : (
+        <IoShirtOutline size={32} aria-hidden />
+      )}
+    </div>
   );
 }
-
-const styles = StyleSheet.create({
-  base: {
-    borderRadius: radius.sm,
-    overflow: 'hidden',
-  },
-  placeholder: {
-    backgroundColor: colors.placeholder,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

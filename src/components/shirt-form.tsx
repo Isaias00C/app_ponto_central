@@ -1,16 +1,15 @@
-import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 
 import { Button } from '@/components/button';
 import { ShirtImage } from '@/components/shirt-image';
-import { colors, radius, spacing } from '@/constants/theme';
-import { pickShirtImage, type PickedImage } from '@/lib/shirt-images';
 import { errorMessage } from '@/lib/shirts';
+
+import styles from './shirt-form.module.css';
 
 export type ShirtFormValues = {
   description: string;
-  /** Imagem nova escolhida na galeria, se houver. */
-  image: PickedImage | null;
+  /** Imagem nova escolhida, se houver. */
+  image: File | null;
   /** A imagem que ja existia foi removida (e nenhuma nova foi escolhida). */
   removeImage: boolean;
 };
@@ -23,12 +22,15 @@ type Props = {
   onSubmit: (values: ShirtFormValues) => Promise<void>;
 };
 
+type PickedImage = { file: File; previewUrl: string };
+
 export function ShirtForm({
   initialDescription = '',
   initialImageUrl = null,
   submitLabel,
   onSubmit,
 }: Props) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [description, setDescription] = useState(initialDescription);
   const [image, setImage] = useState<PickedImage | null>(null);
   const [removeImage, setRemoveImage] = useState(false);
@@ -37,16 +39,30 @@ export function ShirtForm({
 
   const trimmedDescription = description.trim();
   const canSubmit = trimmedDescription.length > 0;
-  const previewUri = image?.uri ?? (removeImage ? null : initialImageUrl);
+  const previewUri = image?.previewUrl ?? (removeImage ? null : initialImageUrl);
 
-  async function chooseImage() {
+  // Libera a URL temporaria do preview ao trocar de imagem ou sair da tela.
+  useEffect(() => {
+    if (!image) return;
+    return () => URL.revokeObjectURL(image.previewUrl);
+  }, [image]);
+
+  function chooseImage() {
     setError(null);
-    try {
-      const picked = await pickShirtImage();
-      if (picked) setImage(picked);
-    } catch (e) {
-      setError(errorMessage(e));
+    fileInputRef.current?.click();
+  }
+
+  function onFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    // Limpa o input para poder escolher o mesmo arquivo de novo depois de remover.
+    event.target.value = '';
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setError('Escolha um arquivo de imagem.');
+      return;
     }
+    setImage({ file, previewUrl: URL.createObjectURL(file) });
   }
 
   function clearImage() {
@@ -54,15 +70,16 @@ export function ShirtForm({
     setRemoveImage(true);
   }
 
-  async function submit() {
-    if (!canSubmit) return;
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    if (!canSubmit || saving) return;
 
     setSaving(true);
     setError(null);
     try {
       await onSubmit({
         description: trimmedDescription,
-        image,
+        image: image?.file ?? null,
         removeImage: removeImage && image === null,
       });
     } catch (e) {
@@ -72,105 +89,52 @@ export function ShirtForm({
   }
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.content}
-      keyboardShouldPersistTaps="handled"
-      automaticallyAdjustKeyboardInsets
-    >
-      <View style={styles.field}>
-        <Text style={styles.label}>Descrição</Text>
-        <TextInput
+    <form className={styles.content} onSubmit={submit}>
+      <label className={styles.field}>
+        <span className={styles.label}>Descrição</span>
+        <textarea
           value={description}
-          onChangeText={setDescription}
+          onChange={(event) => setDescription(event.target.value)}
           placeholder="Ex.: Camisa azul lisa na frente e estampada atrás"
-          placeholderTextColor={colors.textMuted}
-          multiline
-          style={[styles.input, styles.multiline]}
+          rows={4}
+          className={styles.input}
         />
-      </View>
+      </label>
 
-      <View style={styles.field}>
-        <Text style={styles.label}>Imagem (opcional)</Text>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={previewUri ? 'Trocar imagem' : 'Escolher imagem da galeria'}
-          onPress={chooseImage}
+      <div className={styles.field}>
+        <span className={styles.label}>Imagem (opcional)</span>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={onFileChange}
+        />
+        <button
+          type="button"
+          aria-label={previewUri ? 'Trocar imagem' : 'Escolher imagem'}
+          onClick={chooseImage}
           disabled={saving}
-          style={({ pressed }) => pressed && styles.pressed}
+          className={styles.previewButton}
         >
-          <ShirtImage uri={previewUri} style={styles.preview} />
-        </Pressable>
-        <View style={styles.imageActions}>
-          <View style={styles.imageAction}>
-            <Button
-              label={previewUri ? 'Trocar imagem' : 'Escolher da galeria'}
-              variant="secondary"
-              onPress={chooseImage}
-              disabled={saving}
-            />
-          </View>
+          <ShirtImage uri={previewUri} className={styles.preview} />
+        </button>
+        <div className={styles.imageActions}>
+          <Button
+            label={previewUri ? 'Trocar imagem' : 'Escolher imagem'}
+            variant="secondary"
+            onClick={chooseImage}
+            disabled={saving}
+          />
           {previewUri ? (
-            <View style={styles.imageAction}>
-              <Button label="Remover" variant="secondary" onPress={clearImage} disabled={saving} />
-            </View>
+            <Button label="Remover" variant="secondary" onClick={clearImage} disabled={saving} />
           ) : null}
-        </View>
-      </View>
+        </div>
+      </div>
 
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? <p className="banner banner-error">{error}</p> : null}
 
-      <Button label={submitLabel} onPress={submit} disabled={!canSubmit} loading={saving} />
-    </ScrollView>
+      <Button type="submit" label={submitLabel} disabled={!canSubmit} loading={saving} />
+    </form>
   );
 }
-
-const styles = StyleSheet.create({
-  content: {
-    gap: spacing.xl,
-    padding: spacing.lg,
-  },
-  field: {
-    gap: spacing.sm,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  input: {
-    minHeight: 48,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    fontSize: 16,
-    color: colors.text,
-    backgroundColor: colors.surface,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  multiline: {
-    minHeight: 96,
-    textAlignVertical: 'top',
-  },
-  preview: {
-    width: '100%',
-    aspectRatio: 1,
-  },
-  pressed: {
-    opacity: 0.7,
-  },
-  imageActions: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  imageAction: {
-    flex: 1,
-  },
-  error: {
-    backgroundColor: colors.dangerSurface,
-    color: colors.danger,
-    borderRadius: radius.sm,
-    padding: spacing.md,
-    fontSize: 14,
-  },
-});
