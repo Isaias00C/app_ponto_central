@@ -7,7 +7,7 @@ import styles from './home-page.module.css';
 
 export function HomePage() {
   return (
-    <Page title="Camisas">
+    <Page title="Camisas" logo>
       <ShirtList />
     </Page>
   );

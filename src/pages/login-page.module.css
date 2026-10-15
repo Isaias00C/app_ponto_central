@@ -16,14 +16,22 @@
   gap: var(--space-lg);
 }
 
+.logo {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto;
+}
+
 .title {
   font-size: 28px;
   font-weight: 700;
+  text-align: center;
 }
 
 .subtitle {
   font-size: 15px;
   color: var(--color-text-muted);
+  text-align: center;
 }
 
 .field {

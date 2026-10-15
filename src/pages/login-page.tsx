@@ -1,6 +1,7 @@
 import { useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 
 import { Button } from '@/components/button';
+import { Logo } from '@/components/logo';
 import { useAuth } from '@/hooks/use-auth';
 import { errorMessage } from '@/lib/shirts';
 
@@ -42,6 +43,7 @@ export function LoginPage() {
   return (
     <main className={styles.content}>
       <form className={styles.card} onSubmit={submit}>
+        <Logo className={styles.logo} />
         <h1 className={styles.title}>Ponto Central</h1>
         <p className={styles.subtitle}>Entre para acessar o estoque de camisas.</p>
 

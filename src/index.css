@@ -1,12 +1,14 @@
 :root {
-  --color-background: #f4f5f7;
+  /* Identidade visual: marrom e laranja da logo Cozinha Solidaria. */
+  --color-background: #faf6f2;
   --color-surface: #ffffff;
-  --color-border: #e3e5e8;
-  --color-text: #16181d;
-  --color-text-muted: #6b7280;
-  --color-primary: #1d4ed8;
+  --color-border: #eaded3;
+  --color-text: #2a1500;
+  --color-text-muted: #7a6555;
+  --color-primary: #4a2200;
   --color-primary-text: #ffffff;
-  --color-placeholder: #e5e7eb;
+  --color-accent: #ff6800;
+  --color-placeholder: #efe5dc;
   --color-danger: #b91c1c;
   --color-danger-surface: #fee2e2;
   --color-success: #15803d;
@@ -84,7 +86,7 @@ img {
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
 

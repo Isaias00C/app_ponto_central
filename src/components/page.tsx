@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { IoChevronBack, IoClose } from 'react-icons/io5';
 
+import { Logo } from '@/components/logo';
 import { useGoBack } from '@/hooks/use-go-back';
 
 import styles from './layout.module.css';
@@ -11,15 +12,18 @@ type Props = {
   backTo?: string;
   /** Tela no estilo modal (formularios, carrinho): o botao de voltar vira um "fechar". */
   modal?: boolean;
+  /** Mostra a logo do Ponto Central no cabecalho (usado na tela inicial). */
+  logo?: boolean;
   children: ReactNode;
 };
 
 /** Tela com cabecalho fixo no topo. */
-export function Page({ title, backTo, modal, children }: Props) {
+export function Page({ title, backTo, modal, logo, children }: Props) {
   return (
     <div className={styles.page}>
       <header className={styles.header}>
         {backTo ? <BackButton fallback={backTo} modal={modal} /> : null}
+        {logo ? <Logo className={styles.logo} /> : null}
         <h1 className={styles.title}>{title}</h1>
       </header>
       <main className={styles.main}>{children}</main>
