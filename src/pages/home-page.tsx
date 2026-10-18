@@ -24,7 +24,7 @@ function ShirtList() {
     return (
       <EmptyView
         title="Nenhuma camisa cadastrada"
-        message="Vá em Gerenciar para cadastrar a primeira camisa."
+        message="Vá em Cadastro para cadastrar a primeira camisa."
       />
     );
   }

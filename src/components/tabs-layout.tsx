@@ -14,7 +14,7 @@ import { cx } from '@/lib/cx';
 
 import styles from './layout.module.css';
 
-/** Abas Inicio, Transacoes e Gerenciar, com a navbar fixa no rodape. */
+/** Abas Estoque, Vendas e Cadastro, com a navbar fixa no rodape. */
 export function TabsLayout() {
   const managing = useMatch('/manage') !== null;
   const transactions = useMatch('/transactions') !== null;
@@ -30,7 +30,7 @@ export function TabsLayout() {
           className={cx(styles.tab, home && styles.tabActive)}
         >
           {home ? <IoHome size={24} /> : <IoHomeOutline size={24} />}
-          Início
+          Estoque
         </Link>
         <Link
           to="/transactions"
@@ -38,7 +38,7 @@ export function TabsLayout() {
           className={cx(styles.tab, transactions && styles.tabActive)}
         >
           {transactions ? <IoReceipt size={24} /> : <IoReceiptOutline size={24} />}
-          Transações
+          Vendas
         </Link>
         <Link
           to="/manage"
@@ -46,7 +46,7 @@ export function TabsLayout() {
           className={cx(styles.tab, managing && styles.tabActive)}
         >
           {managing ? <IoCube size={24} /> : <IoCubeOutline size={24} />}
-          Gerenciar
+          Cadastro
         </Link>
       </nav>
     </div>

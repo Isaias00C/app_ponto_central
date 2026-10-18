@@ -23,7 +23,7 @@ type Feedback = { kind: 'success' | 'error'; text: string };
 
 export function ManagePage() {
   return (
-    <Page title="Gerenciar estoque">
+    <Page title="Cadastro">
       <Manage />
     </Page>
   );

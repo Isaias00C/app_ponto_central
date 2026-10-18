@@ -12,7 +12,7 @@ import styles from './transactions-page.module.css';
 
 export function TransactionsPage() {
   return (
-    <Page title="Transações">
+    <Page title="Vendas">
       <Transactions />
     </Page>
   );
@@ -29,7 +29,7 @@ function Transactions() {
   if (transactions.length === 0) {
     return (
       <EmptyView
-        title="Nenhuma transação"
+        title="Nenhuma venda"
         message="As baixas de estoque feitas pelo carrinho aparecem aqui."
       />
     );

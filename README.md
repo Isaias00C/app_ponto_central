@@ -52,12 +52,12 @@ Não há *pull to refresh*: o estoque recarrega ao voltar para a aba/app e ao re
 
 ## Imagens das camisas
 
-Ao cadastrar uma camisa (Gerenciar > Cadastrar nova camisa) você escolhe a imagem da galeria/arquivos.
+Ao cadastrar uma camisa (Cadastro > Cadastrar nova camisa) você escolhe a imagem da galeria/arquivos.
 A imagem é reduzida (lado maior de 1280 px, JPEG) antes do envio, para caber nos 5 MB do bucket.
 Ela é enviada para o bucket público `shirt-images` do Supabase Storage (criado pela `migration02.sql`) e o
 link fica salvo em `shirt_types.image_url`. Sem imagem, o card mostra um ícone.
 
-Para **editar** (descrição e imagem) ou **excluir** uma camisa, selecione-a em Gerenciar > Camisa e use os botões
+Para **editar** (descrição e imagem) ou **excluir** uma camisa, selecione-a em Cadastro > Camisa e use os botões
 **Editar** / **Excluir**. Excluir apaga também o estoque dela e a imagem no bucket (exige a `migration04.sql`).
 
 ## Dar baixa (venda)
@@ -76,7 +76,7 @@ feita de uma vez só (tudo ou nada) pela função `checkout_stock`, que recusa a
 ## Estrutura
 
 - `src/App.tsx` — rotas (React Router) e guardas de login
-- `src/pages` — telas: login, abas **Início** e **Gerenciar**, detalhe da camisa, carrinho, nova/editar camisa
+- `src/pages` — telas: login, abas **Estoque**, **Vendas** e **Cadastro**, detalhe da camisa, carrinho, nova/editar camisa
 - `src/lib` — cliente Supabase e operações de dados
 - `src/components`, `src/hooks`, `src/constants` — UI (CSS Modules), estado compartilhado (sessão, estoque, carrinho), tamanhos
 - `src/index.css` — tema (cores, espaçamentos) em variáveis CSS
