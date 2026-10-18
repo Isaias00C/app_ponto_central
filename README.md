@@ -86,3 +86,4 @@ feita de uma vez só (tudo ou nada) pela função `checkout_stock`, que recusa a
   - `migration02.sql` — função `checkout_stock` (baixa em lote) e bucket `shirt-images` com a policy de upload
   - `migration03.sql` — exige login: policies e funções só para `authenticated`
   - `migration04.sql` — editar e excluir camisas: policies de update/delete em `shirt_types` e de remoção de imagens no bucket
+  - `migration05.sql` — registro de transações: tabelas `transacoes` e `transacao_itens` (somente leitura/insert para `authenticated`) e `checkout_stock` passa a gravar cada baixa

@@ -1,4 +1,11 @@
-import { IoCube, IoCubeOutline, IoHome, IoHomeOutline } from 'react-icons/io5';
+import {
+  IoCube,
+  IoCubeOutline,
+  IoHome,
+  IoHomeOutline,
+  IoReceipt,
+  IoReceiptOutline,
+} from 'react-icons/io5';
 import { Link, Outlet, useMatch } from 'react-router';
 
 import { CartBar } from '@/components/cart-bar';
@@ -7,9 +14,11 @@ import { cx } from '@/lib/cx';
 
 import styles from './layout.module.css';
 
-/** Abas Inicio e Gerenciar, com a navbar fixa no rodape. */
+/** Abas Inicio, Transacoes e Gerenciar, com a navbar fixa no rodape. */
 export function TabsLayout() {
   const managing = useMatch('/manage') !== null;
+  const transactions = useMatch('/transactions') !== null;
+  const home = !managing && !transactions;
 
   return (
     <div className={cx(styles.fill, styles.withTabBar)}>
@@ -17,11 +26,19 @@ export function TabsLayout() {
       <nav className={styles.tabBar}>
         <Link
           to="/"
-          aria-current={managing ? undefined : 'page'}
-          className={cx(styles.tab, !managing && styles.tabActive)}
+          aria-current={home ? 'page' : undefined}
+          className={cx(styles.tab, home && styles.tabActive)}
         >
-          {managing ? <IoHomeOutline size={24} /> : <IoHome size={24} />}
+          {home ? <IoHome size={24} /> : <IoHomeOutline size={24} />}
           Início
+        </Link>
+        <Link
+          to="/transactions"
+          aria-current={transactions ? 'page' : undefined}
+          className={cx(styles.tab, transactions && styles.tabActive)}
+        >
+          {transactions ? <IoReceipt size={24} /> : <IoReceiptOutline size={24} />}
+          Transações
         </Link>
         <Link
           to="/manage"

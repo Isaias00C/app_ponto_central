@@ -12,6 +12,7 @@ import { LoginPage } from '@/pages/login-page';
 import { ManagePage } from '@/pages/manage-page';
 import { NewShirtPage } from '@/pages/new-shirt-page';
 import { ShirtDetailPage } from '@/pages/shirt-detail-page';
+import { TransactionsPage } from '@/pages/transactions-page';
 
 export default function App() {
   return (
@@ -43,6 +44,7 @@ function AppRoutes() {
                 <Route index element={<HomePage />} />
                 <Route path="shirt/:id" element={<ShirtDetailPage />} />
               </Route>
+              <Route path="transactions" element={<TransactionsPage />} />
               <Route path="manage" element={<ManagePage />} />
             </Route>
             <Route path="cart" element={<CartPage />} />
