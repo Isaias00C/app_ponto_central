@@ -14,11 +14,14 @@ export type Transaction = {
   createdAt: Date;
   items: TransactionItem[];
   totalUnits: number;
+  /** Caminho do comprovante no bucket privado; `null` se a venda foi feita sem foto. */
+  receiptPath: string | null;
 };
 
 type TransactionRow = {
   id: string;
   created_at: string;
+  receipt_path: string | null;
   transacao_itens: { id: string; descricao: string; size: Size; quantity: number }[];
 };
 
@@ -37,14 +40,15 @@ function toTransaction(row: TransactionRow): Transaction {
     createdAt: new Date(row.created_at),
     items,
     totalUnits: items.reduce((sum, item) => sum + item.quantity, 0),
+    receiptPath: row.receipt_path,
   };
 }
 
-/** Transacoes mais recentes primeiro (ate 200). Exige a migration05. */
+/** Transacoes mais recentes primeiro (ate 200). Exige a migration06. */
 export async function fetchTransactions(): Promise<Transaction[]> {
   const { data, error } = await supabase
     .from('transacoes')
-    .select('id, created_at, transacao_itens(id, descricao, size, quantity)')
+    .select('id, created_at, receipt_path, transacao_itens(id, descricao, size, quantity)')
     .order('created_at', { ascending: false })
     .limit(LIMIT);
 

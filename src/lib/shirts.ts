@@ -100,14 +100,21 @@ export type StockItem = {
   quantity: number;
 };
 
-/** Da baixa em varios itens de uma vez. Tudo ou nada: falha sem alterar nada se faltar estoque. */
-export async function checkoutStock(items: StockItem[]): Promise<void> {
+/**
+ * Da baixa em varios itens de uma vez. Tudo ou nada: falha sem alterar nada se faltar estoque.
+ * `receiptPath` e o caminho do comprovante no bucket `payment-receipts` (exige a migration06).
+ */
+export async function checkoutStock(
+  items: StockItem[],
+  receiptPath: string | null = null,
+): Promise<void> {
   const { error } = await supabase.rpc('checkout_stock', {
     p_items: items.map((item) => ({
       shirt_type_id: item.shirtId,
       size: item.size,
       quantity: item.quantity,
     })),
+    p_receipt_path: receiptPath,
   });
 
   if (error) throw error;

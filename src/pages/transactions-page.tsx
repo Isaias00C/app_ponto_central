@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { IoChevronDown } from 'react-icons/io5';
 
 import { Page } from '@/components/page';
@@ -6,6 +6,7 @@ import { EmptyView, ErrorView, LoadingView } from '@/components/state-views';
 import { useTransactions } from '@/hooks/use-transactions';
 import { cx } from '@/lib/cx';
 import { dateTime, units } from '@/lib/format';
+import { getPaymentReceiptUrl } from '@/lib/payment-receipts';
 import type { Transaction } from '@/lib/transactions';
 
 import styles from './transactions-page.module.css';
@@ -75,17 +76,55 @@ function TransactionCard({ transaction, open, onToggle }: CardProps) {
       </button>
 
       {open ? (
-        <ul id={detailsId} className={styles.items}>
-          {transaction.items.map((item) => (
-            <li key={item.id} className={styles.item}>
-              <span className={styles.itemDescription}>{item.description}</span>
-              <span className={styles.itemMeta}>
-                Tamanho {item.size} · {item.quantity} un.
-              </span>
-            </li>
-          ))}
-        </ul>
+        <div id={detailsId} className={styles.details}>
+          <ul className={styles.items}>
+            {transaction.items.map((item) => (
+              <li key={item.id} className={styles.item}>
+                <span className={styles.itemDescription}>{item.description}</span>
+                <span className={styles.itemMeta}>
+                  Tamanho {item.size} · {item.quantity} un.
+                </span>
+              </li>
+            ))}
+          </ul>
+          {transaction.receiptPath ? <Receipt path={transaction.receiptPath} /> : null}
+        </div>
       ) : null}
     </li>
+  );
+}
+
+type ReceiptState = { path: string; url: string | null; failed: boolean };
+
+/** Comprovante da venda. O bucket e privado: pede um link temporario ao abrir. */
+function Receipt({ path }: { path: string }) {
+  const [state, setState] = useState<ReceiptState | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    getPaymentReceiptUrl(path).then(
+      (url) => !cancelled && setState({ path, url, failed: false }),
+      () => !cancelled && setState({ path, url: null, failed: true }),
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [path]);
+
+  const current = state?.path === path ? state : null;
+
+  return (
+    <div className={styles.receipt}>
+      <span className={styles.receiptLabel}>Comprovante</span>
+      {current?.url ? (
+        <a href={current.url} target="_blank" rel="noreferrer">
+          <img src={current.url} alt="Comprovante de pagamento" className={styles.receiptImage} />
+        </a>
+      ) : current?.failed ? (
+        <p className={styles.itemMeta}>Não foi possível carregar o comprovante.</p>
+      ) : (
+        <p className={styles.itemMeta}>Carregando…</p>
+      )}
+    </div>
   );
 }

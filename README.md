@@ -66,12 +66,21 @@ Abra uma camisa e use **+** nos tamanhos para separar unidades no carrinho. Vá 
 **Carrinho** aparece acima da navbar; ao abri-la, confira os itens e toque em **Dar baixa no estoque**. A baixa é
 feita de uma vez só (tudo ou nada) pela função `checkout_stock`, que recusa a operação se faltar estoque em algum item.
 
+## Comprovante de pagamento
+
+No carrinho, antes de **Dar baixa no estoque**, dá para tirar a foto do comprovante (ou escolher da galeria). É
+opcional. A imagem é reduzida no aparelho (lado maior de 1600 px, JPEG qualidade 0,7) e enviada para o bucket
+**privado** `payment-receipts`; o caminho do arquivo fica em `transacoes.receipt_path`, gravado pela própria função
+`checkout_stock`. Se a baixa falhar, a foto enviada é apagada. Na aba **Vendas**, ao abrir uma venda, o app gera um
+link temporário (1 hora) e mostra o comprovante. Exige a `migration06.sql`.
+
 ## Segurança
 
 - O app é estático e a *publishable key* vai no site; **quem protege os dados é o RLS** do Supabase, não o login do app.
   Por isso as policies (`migration03.sql`) só aceitam o role `authenticated`.
 - Contas são criadas manualmente no painel (cadastro público desligado).
-- As imagens ficam em bucket público: quem tiver o link de uma imagem consegue vê-la sem login.
+- As imagens das camisas ficam em bucket público: quem tiver o link de uma imagem consegue vê-la sem login.
+- Os comprovantes ficam em bucket **privado**: só usuário logado gera o link para vê-los.
 
 ## Estrutura
 
@@ -87,3 +96,4 @@ feita de uma vez só (tudo ou nada) pela função `checkout_stock`, que recusa a
   - `migration03.sql` — exige login: policies e funções só para `authenticated`
   - `migration04.sql` — editar e excluir camisas: policies de update/delete em `shirt_types` e de remoção de imagens no bucket
   - `migration05.sql` — registro de transações: tabelas `transacoes` e `transacao_itens` (somente leitura/insert para `authenticated`) e `checkout_stock` passa a gravar cada baixa
+  - `migration06.sql` — comprovante de pagamento: coluna `transacoes.receipt_path`, bucket privado `payment-receipts` com policies para `authenticated` e `checkout_stock` com o parâmetro `p_receipt_path`
