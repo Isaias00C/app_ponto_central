@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
-import { IoCameraOutline } from 'react-icons/io5';
 
 import { Button } from '@/components/button';
 
@@ -14,11 +13,12 @@ type Props = {
 type Picked = { file: File; previewUrl: string };
 
 /**
- * Foto do comprovante de pagamento: tira na hora (camera) ou escolhe da galeria. A escolha fica
+ * Foto do comprovante de pagamento: botoes separados para tirar na hora (camera) ou escolher da galeria. A escolha fica
  * aqui dentro; quem usa so recebe o arquivo e deve zerar o seu proprio estado ao desmontar.
  */
 export function ReceiptPicker({ onChange, disabled }: Props) {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const galleryRef = useRef<HTMLInputElement>(null);
   const [picked, setPicked] = useState<Picked | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,8 +48,14 @@ export function ReceiptPicker({ onChange, disabled }: Props) {
     onChange(null);
   }
 
-  function choose() {
-    inputRef.current?.click();
+  // O navegador do celular so oferece a camera junto da galeria quando quer; com `capture` ela abre
+  // direto, e sem ele abre o seletor. Por isso sao dois inputs, um para cada caminho.
+  function openCamera() {
+    cameraRef.current?.click();
+  }
+
+  function openGallery() {
+    galleryRef.current?.click();
   }
 
   const previewUrl = picked?.previewUrl ?? null;
@@ -57,31 +63,32 @@ export function ReceiptPicker({ onChange, disabled }: Props) {
   return (
     <div className={styles.container}>
       <span className={styles.label}>Comprovante de pagamento</span>
-      <input ref={inputRef} type="file" accept="image/*" hidden onChange={onFileChange} />
+      <input
+        ref={cameraRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        hidden
+        onChange={onFileChange}
+      />
+      <input ref={galleryRef} type="file" accept="image/*" hidden onChange={onFileChange} />
 
       {previewUrl ? (
-        <button
-          type="button"
-          aria-label="Trocar foto do comprovante"
-          onClick={choose}
-          disabled={disabled}
-          className={styles.previewButton}
-        >
-          <img src={previewUrl} alt="Comprovante de pagamento" className={styles.preview} />
-        </button>
-      ) : (
-        <button type="button" onClick={choose} disabled={disabled} className={styles.empty}>
-          <IoCameraOutline size={28} aria-hidden />
-          <span>Tirar foto ou escolher imagem</span>
-        </button>
-      )}
-
-      {picked ? (
-        <div className={styles.actions}>
-          <Button label="Trocar" variant="secondary" onClick={choose} disabled={disabled} />
-          <Button label="Remover" variant="secondary" onClick={remove} disabled={disabled} />
-        </div>
+        <img src={previewUrl} alt="Comprovante de pagamento" className={styles.preview} />
       ) : null}
+
+      <div className={styles.actions}>
+        <Button
+          label="Tirar foto"
+          variant="secondary"
+          onClick={openCamera}
+          disabled={disabled}
+        />
+        <Button label="Galeria" variant="secondary" onClick={openGallery} disabled={disabled} />
+        {picked ? (
+          <Button label="Remover" variant="secondary" onClick={remove} disabled={disabled} />
+        ) : null}
+      </div>
 
       {error ? <p className="banner banner-error">{error}</p> : null}
     </div>
