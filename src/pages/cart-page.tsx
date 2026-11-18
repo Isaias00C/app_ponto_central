@@ -4,6 +4,7 @@ import { IoTrashOutline } from 'react-icons/io5';
 import { Button } from '@/components/button';
 import { Page } from '@/components/page';
 import { QuantityStepper } from '@/components/quantity-stepper';
+import { ReceiptPicker } from '@/components/receipt-picker';
 import { ShirtImage } from '@/components/shirt-image';
 import { EmptyView, ErrorView, LoadingView } from '@/components/state-views';
 import { useCart } from '@/hooks/use-cart';
@@ -12,6 +13,7 @@ import { useShirts } from '@/hooks/use-shirts';
 import { confirmAction } from '@/lib/confirm';
 import { cx } from '@/lib/cx';
 import { units } from '@/lib/format';
+import { deletePaymentReceipt, uploadPaymentReceipt } from '@/lib/payment-receipts';
 import { checkoutStock, errorMessage } from '@/lib/shirts';
 
 import styles from './cart-page.module.css';
@@ -30,6 +32,7 @@ function Cart() {
   const goBack = useGoBack('/');
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
+  const [receipt, setReceipt] = useState<File | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
 
   // Garante o estoque atualizado antes de conferir o carrinho.
@@ -75,11 +78,16 @@ function Cart() {
   async function submit() {
     setSaving(true);
     setFailure(null);
+    let receiptPath: string | null = null;
     try {
-      await checkoutStock(items);
+      if (receipt) receiptPath = await uploadPaymentReceipt(receipt);
+      await checkoutStock(items, receiptPath);
       clear();
+      setReceipt(null);
       setDone(true);
     } catch (e) {
+      // A baixa nao aconteceu: nao deixa a foto orfa no bucket (o reenvio sobe de novo).
+      if (receiptPath) await deletePaymentReceipt(receiptPath);
       setFailure(errorMessage(e));
     } finally {
       await reload();
@@ -126,6 +134,8 @@ function Cart() {
 
       <p className={styles.total}>Total: {units(totalUnits)}</p>
 
+      <ReceiptPicker onChange={setReceipt} disabled={saving} />
+
       {failure ? <p className="banner banner-error">{failure}</p> : null}
 
       <Button
@@ -134,7 +144,15 @@ function Cart() {
         disabled={hasInsufficient}
         loading={saving}
       />
-      <Button label="Limpar carrinho" variant="secondary" onClick={clear} disabled={saving} />
+      <Button
+        label="Limpar carrinho"
+        variant="secondary"
+        onClick={() => {
+          clear();
+          setReceipt(null);
+        }}
+        disabled={saving}
+      />
     </div>
   );
 }
