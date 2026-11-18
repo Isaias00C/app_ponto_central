@@ -1,49 +1,14 @@
+import { resizeImage, uniqueImagePath } from '@/lib/image-resize';
 import { supabase } from '@/lib/supabase';
 
 const BUCKET = 'shirt-images';
 
-/** Maior lado da imagem enviada (o seletor de arquivos do navegador nao recorta nem comprime). */
-const MAX_DIMENSION = 1280;
-
-const EXTENSIONS: Record<string, string> = {
-  'image/jpeg': 'jpg',
-  'image/png': 'png',
-  'image/webp': 'webp',
-  'image/heic': 'heic',
-};
-
-/**
- * Uma foto de celular pode passar dos 5 MB do bucket: reduz e converte para JPEG. Se o navegador
- * nao decodificar o formato (ex.: HEIC no Chrome), envia o original.
- */
-async function resizeImage(file: File): Promise<Blob> {
-  try {
-    const bitmap = await createImageBitmap(file);
-    const scale = Math.min(1, MAX_DIMENSION / Math.max(bitmap.width, bitmap.height));
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.round(bitmap.width * scale);
-    canvas.height = Math.round(bitmap.height * scale);
-    canvas.getContext('2d')?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-    bitmap.close();
-
-    const resized = await new Promise<Blob | null>((resolve) =>
-      canvas.toBlob(resolve, 'image/jpeg', 0.8),
-    );
-    if (resized) return resized;
-  } catch {
-    // Formato nao suportado pelo navegador: cai no original abaixo.
-  }
-
-  return file;
-}
-
 /** Envia a imagem para o Storage do Supabase e devolve a URL publica. */
 export async function uploadShirtImage(file: File): Promise<string> {
-  const body = await resizeImage(file);
+  const body = await resizeImage(file, { maxDimension: 1280, quality: 0.8 });
   const mimeType = body.type || 'image/jpeg';
 
-  const extension = EXTENSIONS[mimeType] ?? 'jpg';
-  const path = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${extension}`;
+  const path = uniqueImagePath(mimeType);
 
   const { error } = await supabase.storage.from(BUCKET).upload(path, body, {
     contentType: mimeType,
