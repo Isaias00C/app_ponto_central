@@ -9,36 +9,6 @@
   font-weight: 600;
 }
 
-.empty {
-  min-height: 96px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-xs);
-  padding: var(--space-md);
-  font-size: 14px;
-  color: var(--color-text-muted);
-  background: var(--color-surface);
-  border: 1px dashed var(--color-border);
-  border-radius: var(--radius-md);
-}
-
-.empty:active:not(:disabled) {
-  opacity: 0.7;
-}
-
-.previewButton {
-  padding: 0;
-  border: none;
-  background: none;
-  border-radius: var(--radius-md);
-}
-
-.previewButton:active:not(:disabled) {
-  opacity: 0.7;
-}
-
 .preview {
   display: block;
   width: 100%;
@@ -52,4 +22,11 @@
 .actions {
   display: flex;
   gap: var(--space-sm);
+}
+
+/* Ate tres botoes na mesma linha: divide o espaco e encurta o padding lateral. */
+.actions > button {
+  flex: 1;
+  min-width: 0;
+  padding-inline: var(--space-sm);
 }
